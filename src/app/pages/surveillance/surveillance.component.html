@@ -1,0 +1,88 @@
+<div class="layout">
+  <app-sidebar></app-sidebar>
+  <div class="main">
+    <app-navbar title="Surveillance"></app-navbar>
+    <div class="content">
+
+      <!-- TMDB Status Banner -->
+      <div class="status-banner" [class]="tmdbStatus ? 'online' : 'offline'">
+        <span class="status-dot"></span>
+        <span>TMDB API — {{ tmdbStatus ? 'Opérationnelle ✅' : 'Hors ligne ❌' }}</span>
+        <button class="btn-refresh" (click)="loadData()">🔄 Actualiser</button>
+      </div>
+
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement...</p>
+      </div>
+
+      <div *ngIf="!loading" class="surveillance-grid">
+
+        <!-- Activité Récente -->
+        <div class="activity-card">
+          <div class="card-header">
+            <h3>⚡ Activité Récente</h3>
+            <span class="count-badge">
+              {{ activities.length }} événements
+            </span>
+          </div>
+          <div class="activity-list">
+            <div *ngFor="let activity of activities"
+              class="activity-item">
+              <div class="activity-icon"
+                [class]="getActivityColor(activity.type)">
+                {{ activity.icon }}
+              </div>
+              <div class="activity-info">
+                <span class="activity-user">
+                  {{ activity.utilisateur }}
+                </span>
+                <span class="activity-msg">
+                  {{ activity.message }}
+                </span>
+              </div>
+              <div class="activity-date">
+                {{ activity.date | date:'dd/MM HH:mm' }}
+              </div>
+            </div>
+            <div *ngIf="activities.length === 0" class="empty">
+              Aucune activité récente
+            </div>
+          </div>
+        </div>
+
+        <!-- Dernières Connexions -->
+        <div class="connexions-card">
+          <div class="card-header">
+            <h3>🔐 Dernières Connexions</h3>
+          </div>
+          <div class="connexions-list">
+            <div *ngFor="let user of connexions; let i = index"
+              class="connexion-item">
+              <div class="conn-rank">{{ i + 1 }}</div>
+              <div class="conn-avatar">
+                {{ user.nom.charAt(0).toUpperCase() }}
+              </div>
+              <div class="conn-info">
+                <span class="conn-name">{{ user.nom }}</span>
+                <span class="conn-email">{{ user.email }}</span>
+              </div>
+              <div class="conn-right">
+                <span [class]="user.actif ? 'badge-green' : 'badge-red'">
+                  {{ user.actif ? 'Actif' : 'Inactif' }}
+                </span>
+                <span class="conn-date">
+                  {{ user.derniereConnexion || '—' }}
+                </span>
+              </div>
+            </div>
+            <div *ngIf="connexions.length === 0" class="empty">
+              Aucune connexion
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
