@@ -1,0 +1,66 @@
+<div class="login-container">
+
+  <!-- Left Side -->
+  <div class="login-left">
+    <div class="brand">
+      <div class="brand-icon">🎬</div>
+      <h1>Smart Movie</h1>
+      <p>Platform Admin</p>
+    </div>
+  </div>
+
+  <!-- Right Side -->
+  <div class="login-right">
+    <div class="login-card">
+
+      <div class="login-header">
+        <div class="avatar">👤</div>
+        <h2>Connexion Admin</h2>
+        <p>Accès réservé aux administrateurs</p>
+      </div>
+
+      <div class="login-form">
+
+        <div class="form-group">
+          <label>📧 Email</label>
+          <input
+            type="email"
+            [(ngModel)]="email"
+            placeholder="admin@smartmovie.com"
+            (keyup.enter)="login()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>🔑 Mot de passe</label>
+          <div class="password-wrapper">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              [(ngModel)]="motPasse"
+              placeholder="••••••••"
+              (keyup.enter)="login()"
+            />
+            <button class="toggle-pass"
+              (click)="showPassword = !showPassword">
+              {{ showPassword ? '🙈' : '👁️' }}
+            </button>
+          </div>
+        </div>
+
+        <button class="btn-login"
+          (click)="login()"
+          [disabled]="loading">
+          <span *ngIf="!loading">Se Connecter</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+
+      </div>
+
+      <div class="login-footer">
+        <p>Smart Movie Platform © 2026</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
