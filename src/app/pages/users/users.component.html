@@ -1,0 +1,222 @@
+<div class="layout">
+  <app-sidebar></app-sidebar>
+  <div class="main">
+    <app-navbar title="Gestion des Utilisateurs"></app-navbar>
+    <div class="content">
+
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            [(ngModel)]="searchQuery"
+            (input)="search()"
+            placeholder="Rechercher par nom ou email..."
+            class="search-input"/>
+        </div>
+        <div class="toolbar-right">
+          <span class="total-badge">
+            👥 {{ filteredUsers.length }} utilisateur(s)
+          </span>
+          <button class="btn-refresh" (click)="loadUsers()">
+            🔄 Actualiser
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement...</p>
+      </div>
+
+      <div *ngIf="!loading" class="users-layout">
+
+        <div class="table-card" [class.shrink]="selectedUser">
+          <table class="data-table">
+            <thead>
+              <tr>
+                
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Statut</th>
+                <th>Inscription</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of filteredUsers"
+                [class.selected-row]="selectedUser?.id === user.id">
+                <td>
+                  <div class="user-info">
+                    <div class="avatar">
+                      {{ user.nom.charAt(0).toUpperCase() }}
+                    </div>
+                    <strong>{{ user.nom }}</strong>
+                  </div>
+                </td>
+                <td class="email-cell">{{ user.email }}</td>
+                <td>
+                  <span [class]="user.role === 'ROLE_ADMIN'
+                    ? 'badge badge-purple' : 'badge badge-blue'">
+                    {{ user.role === 'ROLE_ADMIN' ? 'Admin' : 'Client' }}
+                  </span>
+                </td>
+                <td>
+                  <span [class]="user.actif
+                    ? 'badge badge-green' : 'badge badge-red'">
+                    {{ user.actif ? '✅ Actif' : '🔴 Inactif' }}
+                  </span>
+                </td>
+                <td class="date-cell">{{ user.dateInscription }}</td>
+                <td class="actions-cell">
+                  <button class="btn-icon btn-view"
+                    (click)="viewUser(user)" title="Voir profil">
+                    👁️
+                  </button>
+                  <button
+                    [class]="user.actif
+                      ? 'btn-icon btn-warning'
+                      : 'btn-icon btn-success'"
+                    (click)="toggleUser(user)"
+                    [title]="user.actif ? 'Désactiver' : 'Activer'">
+                    {{ user.actif ? '🔒' : '🔓' }}
+                  </button>
+                  <button class="btn-icon btn-danger"
+                    (click)="deleteUser(user.id)"
+                    title="Supprimer">
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="filteredUsers.length === 0">
+                <td colspan="7" class="empty-row">
+                  Aucun utilisateur trouvé
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Detail Panel -->
+<div *ngIf="selectedUser" class="detail-panel">
+  <div class="detail-header">
+    <h3>{{ editMode ? '✏️ Modifier' : 'Profil Utilisateur' }}</h3>
+    <button class="btn-close" (click)="closeDetail()">✕</button>
+  </div>
+  <div class="detail-body">
+
+    <!-- Success Message -->
+    <div *ngIf="editSuccess" class="success-msg">
+      ✅ Modifications enregistrées !
+    </div>
+
+    <!-- View Mode -->
+    <div *ngIf="!editMode">
+      <div class="detail-avatar">
+        {{ selectedUser.nom.charAt(0).toUpperCase() }}
+      </div>
+      <h4 class="detail-name">{{ selectedUser.nom }}</h4>
+      <p class="detail-email">{{ selectedUser.email }}</p>
+
+      <div class="detail-badges">
+        <span [class]="selectedUser.role === 'ROLE_ADMIN'
+          ? 'badge badge-purple' : 'badge badge-blue'">
+          {{ selectedUser.role === 'ROLE_ADMIN' ? 'Admin' : 'Client' }}
+        </span>
+        <span [class]="selectedUser.actif
+          ? 'badge badge-green' : 'badge badge-red'">
+          {{ selectedUser.actif ? 'Actif' : 'Inactif' }}
+        </span>
+      </div>
+
+      <div class="detail-stats-numbers">
+        <div class="stat-box">
+          <span class="number">{{ selectedUser.totalFavoris || 0 }}</span>
+          <span class="label">❤️ Favoris</span>
+        </div>
+        <div class="stat-box">
+          <span class="number">
+            {{ selectedUser.totalConsultations || 0 }}
+          </span>
+          <span class="label">👁️ Consultations</span>
+        </div>
+      </div>
+
+      <div class="detail-stats">
+        <div class="detail-stat">
+          <span class="stat-label">📅 Inscription</span>
+          <span class="stat-val">
+            {{ selectedUser.dateInscription || '—' }}
+          </span>
+        </div>
+        <div class="detail-stat">
+          <span class="stat-label">🕐 Dernière connexion</span>
+          <span class="stat-val">
+            {{ selectedUser.derniereConnexion || '—' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn btn-edit" (click)="openEdit()">
+          ✏️ Modifier les infos
+        </button>
+        <button
+          [class]="selectedUser.actif
+            ? 'btn btn-warning' : 'btn btn-success'"
+          (click)="toggleUser(selectedUser)">
+          {{ selectedUser.actif ? '🔒 Désactiver' : '🔓 Activer' }}
+        </button>
+        <button class="btn btn-danger"
+          (click)="deleteUser(selectedUser.id)">
+          🗑️ Supprimer
+        </button>
+      </div>
+    </div>
+
+    <!-- Edit Mode -->
+    <div *ngIf="editMode" class="edit-form">
+      <div class="form-group">
+        <label>👤 Nom</label>
+        <input type="text"
+          [(ngModel)]="editForm.nom"
+          placeholder="Nom complet"
+          class="form-input"/>
+      </div>
+
+      <div class="form-group">
+        <label>📧 Email</label>
+        <input type="email"
+          [(ngModel)]="editForm.email"
+          placeholder="Email"
+          class="form-input"/>
+      </div>
+
+      <div class="form-group">
+        <label>🎭 Rôle</label>
+        <select [(ngModel)]="editForm.role" class="form-input">
+          <option value="ROLE_CLIENT">Client</option>
+          <option value="ROLE_ADMIN">Admin</option>
+        </select>
+      </div>
+
+      <div class="edit-actions">
+        <button class="btn btn-save"
+          (click)="saveEdit()"
+          [disabled]="editLoading">
+          <span *ngIf="!editLoading">💾 Enregistrer</span>
+          <span *ngIf="editLoading">⏳ Sauvegarde...</span>
+        </button>
+        <button class="btn btn-cancel"
+          (click)="cancelEdit()">
+          ✕ Annuler
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+      </div>
+    </div>
+  </div>
+</div>
