@@ -1,0 +1,199 @@
+<div class="layout">
+  <app-sidebar></app-sidebar>
+  <div class="main">
+    <app-navbar title="Dashboard"></app-navbar>
+    <div class="content">
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading">
+        <div class="spinner-big"></div>
+        <p>Chargement du dashboard...</p>
+      </div>
+
+      <div *ngIf="!loading">
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-left blue">
+              <span class="stat-icon">👥</span>
+            </div>
+            <div class="stat-right">
+              <span class="stat-value">
+                {{ dashboard?.totalUtilisateurs || 0 }}
+              </span>
+              <span class="stat-label">Utilisateurs</span>
+              <span class="stat-trend">↑ Total inscrits</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-left red">
+              <span class="stat-icon">🎬</span>
+            </div>
+            <div class="stat-right">
+              <span class="stat-value">
+                {{ dashboard?.totalFilmsConsultes || 0 }}
+              </span>
+              <span class="stat-label">Consultations</span>
+              <span class="stat-trend">↑ Films vus</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-left green">
+              <span class="stat-icon">❤️</span>
+            </div>
+            <div class="stat-right">
+              <span class="stat-value">
+                {{ dashboard?.totalFavoris || 0 }}
+              </span>
+              <span class="stat-label">Favoris</span>
+              <span class="stat-trend">↑ Ajouts favoris</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-left" [class]="tmdbStatus ? 'teal' : 'gray'">
+              <span class="stat-icon">🔌</span>
+            </div>
+            <div class="stat-right">
+              <span class="stat-value" [style.color]="tmdbStatus ? '#43a047' : '#e53935'">
+                {{ tmdbStatus ? 'En ligne' : 'Hors ligne' }}
+              </span>
+              <span class="stat-label">TMDB API</span>
+              <span class="stat-trend">
+                {{ tmdbStatus ? '✅ Opérationnel' : '❌ Erreur' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="charts-row">
+
+          <div class="chart-card wide">
+            <div class="chart-header">
+              <h3>📈 Inscriptions par Semaine</h3>
+            </div>
+            <div class="chart-body">
+              <canvas baseChart
+                [data]="inscriptionsChartData"
+                [options]="inscriptionsChartOptions"
+                type="bar">
+              </canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>🎭 Genres Populaires</h3>
+            </div>
+            <div class="chart-body">
+              <canvas baseChart
+                [data]="genresChartData"
+                [options]="genresChartOptions"
+                type="doughnut">
+              </canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Charts Row 2 + Table -->
+        <div class="bottom-row">
+
+          <!-- Top Films Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>🏆 Top 5 Films</h3>
+            </div>
+            <div class="chart-body">
+              <canvas baseChart
+                [data]="filmsChartData"
+                [options]="filmsChartOptions"
+                type="bar">
+              </canvas>
+            </div>
+          </div>
+
+          <!-- Last Connexions -->
+          <div class="table-card">
+            <div class="table-header">
+              <h3>🕐 Dernières Connexions</h3>
+            </div>
+            <div class="connexions-list">
+              <div *ngFor="let user of lastConnexions"
+                class="connexion-item">
+                <div class="conn-avatar">
+                  {{ user.nom.charAt(0).toUpperCase() }}
+                </div>
+                <div class="conn-info">
+                  <span class="conn-name">{{ user.nom }}</span>
+                  <span class="conn-email">{{ user.email }}</span>
+                </div>
+                <div class="conn-date">
+                  {{ user.derniereConnexion || '—' }}
+                </div>
+              </div>
+              <div *ngIf="lastConnexions.length === 0"
+                class="empty-conn">
+                Aucune connexion récente
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Top Films Table -->
+        <div class="films-table-card">
+          <div class="table-header">
+            <h3>🎬 Top 10 Films les Plus Aimés</h3>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Poster</th>
+                <th>Titre</th>
+                <th>❤️ Favoris</th>
+                <th>👁️ Vues</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let film of topFilms; let i = index">
+                <td>
+                  <span class="rank"
+                    [class]="i < 3 ? 'rank gold' : 'rank'">
+                    {{ i + 1 }}
+                  </span>
+                </td>
+                <td>
+                  <img [src]="film.posterUrl"
+                    [alt]="film.titre"
+                    class="film-poster"
+                    onerror="this.src='https://via.placeholder.com/40x56'"/>
+                </td>
+                <td>
+                  <span class="film-title">{{ film.titre }}</span>
+                </td>
+                <td>
+                  <span class="badge-red">❤️ {{ film.nombreFavoris }}</span>
+                </td>
+                <td>
+                  <span class="badge-blue">👁️ {{ film.nombreVues }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="topFilms.length === 0">
+                <td colspan="5" class="empty">
+                  Aucun film pour le moment
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
