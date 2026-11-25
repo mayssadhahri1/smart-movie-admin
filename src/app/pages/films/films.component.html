@@ -1,0 +1,314 @@
+<div class="layout">
+
+  <!-- 🍿 Toasts -->
+  <div class="toast-stack" aria-live="polite">
+    <div
+      *ngFor="let toast of toasts"
+      class="toast"
+      [class.toast-success]="toast.type === 'success'"
+      [class.toast-error]="toast.type === 'error'">
+      <span class="toast-icon">{{ toast.type === 'success' ? '🎬' : '⚠️' }}</span>
+      <div class="toast-body">
+        <strong>{{ toast.title }}</strong>
+        <span>{{ toast.message }}</span>
+      </div>
+      <button class="toast-close" (click)="removeToast(toast.id)">✕</button>
+      <div class="toast-timer"></div>
+    </div>
+  </div>
+
+  <!-- 🎬 Modal : Ajouter / Modifier un film -->
+  <div
+    *ngIf="modeAjout"
+    class="modal-backdrop"
+    [class.closing]="isModalClosing"
+    (click)="onBackdropClick()">
+    <div class="modal-panel" [class.closing]="isModalClosing" (click)="$event.stopPropagation()">
+
+      <div class="modal-slate">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+
+      <div class="modal-header">
+        <div class="modal-header-text">
+          <span class="modal-eyebrow">Catalogue plateforme</span>
+          <h3>{{ modeEdition ? '✏️ Modifier le film' : '🎬 Nouveau film' }}</h3>
+        </div>
+        <button class="modal-close" (click)="toggleModeAjout()" aria-label="Fermer">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+
+          <div class="form-field span-2">
+            <label>Titre <span class="req">*</span></label>
+            <input [(ngModel)]="nouveauFilm.titre" placeholder="Ex : Inception" class="form-input"/>
+          </div>
+
+          <div class="form-field span-2">
+            <label>Synopsis</label>
+            <textarea [(ngModel)]="nouveauFilm.synopsis" placeholder="De quoi parle ce film ?" class="form-input form-textarea" rows="3"></textarea>
+          </div>
+
+          <div class="form-field">
+            <label>Note <span class="hint">/ 10</span></label>
+            <input [(ngModel)]="nouveauFilm.note" placeholder="7.5" class="form-input"/>
+          </div>
+
+          <div class="form-field">
+            <label>Durée</label>
+            <input [(ngModel)]="nouveauFilm.duree" placeholder="120 min" class="form-input"/>
+          </div>
+
+          <div class="form-field">
+            <label>Date de sortie</label>
+            <input [(ngModel)]="nouveauFilm.dateSortie" type="date" class="form-input"/>
+          </div>
+
+          <div class="form-field">
+            <label>Genres</label>
+            <input [(ngModel)]="nouveauFilm.genres" placeholder="Action, Drame" class="form-input"/>
+          </div>
+
+          <div class="form-field span-2">
+            <label>URL du poster</label>
+            <input [(ngModel)]="nouveauFilm.posterUrl" placeholder="https://..." class="form-input"/>
+          </div>
+
+          <div class="form-field span-2" *ngIf="nouveauFilm.posterUrl">
+            <div class="poster-preview">
+              <img [src]="nouveauFilm.posterUrl" alt="Aperçu du poster" (error)="posterPreviewValide = false" (load)="posterPreviewValide = true"/>
+              <span class="poster-preview-label">Aperçu</span>
+            </div>
+          </div>
+
+          <div class="form-field span-2">
+            <label>URL du backdrop</label>
+            <input [(ngModel)]="nouveauFilm.backdropUrl" placeholder="https://..." class="form-input"/>
+          </div>
+
+          <div class="form-field span-2">
+            <label>
+              Fichier vidéo
+              <span class="req" *ngIf="!modeEdition">*</span>
+              <span class="hint" *ngIf="modeEdition">(optionnel — laissez vide pour garder la vidéo actuelle)</span>
+            </label>
+            <div
+              class="dropzone"
+              [class.has-file]="fichierVideoNouveau"
+              (click)="fileInput.click()"
+              (dragover)="$event.preventDefault()"
+              (drop)="onDropVideo($event)">
+              <input
+                #fileInput
+                type="file"
+                accept="video/mp4,video/x-matroska,video/webm"
+                (change)="onFichierVideoNouveauSelectionne($event)"
+                hidden/>
+
+              <ng-container *ngIf="!fichierVideoNouveau">
+                <span class="dz-icon">📹</span>
+                <span class="dz-text">
+                  {{ modeEdition ? 'Cliquez pour remplacer la vidéo' : 'Cliquez ou glissez une vidéo ici' }}
+                </span>
+                <span class="dz-sub">MP4, MKV, WEBM, MOV</span>
+              </ng-container>
+
+              <ng-container *ngIf="fichierVideoNouveau">
+                <span class="dz-icon">🎞️</span>
+                <span class="dz-text">{{ fichierVideoNouveau.name }}</span>
+                <span class="dz-sub">{{ formatFileSize(fichierVideoNouveau.size) }} · cliquez pour changer</span>
+              </ng-container>
+            </div>
+          </div>
+
+        </div>
+
+        <p *ngIf="ajoutErreur" class="form-error">⚠️ {{ ajoutErreur }}</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" [disabled]="ajoutEnCours" (click)="toggleModeAjout()">Annuler</button>
+        <button class="btn-primary" [disabled]="ajoutEnCours" (click)="soumettreAjout()">
+          <ng-container *ngIf="!ajoutEnCours">
+            {{ modeEdition ? '💾 Enregistrer les modifications' : '✅ Créer le film' }}
+          </ng-container>
+          <span *ngIf="ajoutEnCours" class="btn-loading">
+            <span class="mini-spinner"></span> {{ modeEdition ? 'Enregistrement...' : 'Envoi en cours...' }}
+          </span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <app-sidebar></app-sidebar>
+  <div class="main">
+    <app-navbar title="Gestion des Films"></app-navbar>
+    <div class="content">
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button
+          [class]="activeTab === 'vues' ? 'tab active' : 'tab'"
+          (click)="switchTab('vues')">
+          👁️ Top Films Consultés
+        </button>
+        <button
+          [class]="activeTab === 'favoris' ? 'tab active' : 'tab'"
+          (click)="switchTab('favoris')">
+          ❤️ Top Films Favoris
+        </button>
+        <button
+          [class]="activeTab === 'catalogue' ? 'tab active' : 'tab'"
+          (click)="switchTab('catalogue')">
+          🛒 Catalogue Plateforme
+        </button>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span>🔍</span>
+          <input
+            [(ngModel)]="searchQuery"
+            (input)="search()"
+            placeholder="Rechercher un film..."
+            class="search-input"/>
+        </div>
+        <span class="total-badge">
+          🎬 {{ filteredFilms.length }} film(s)
+        </span>
+        <button class="btn-refresh" (click)="loadFilms()">
+          🔄 Actualiser
+        </button>
+        <button
+          *ngIf="activeTab === 'catalogue'"
+          class="btn-add-film"
+          (click)="toggleModeAjout()">
+          ➕ Nouveau film
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Chargement des films...</p>
+      </div>
+
+      <div *ngIf="!loading" class="films-layout">
+
+        <!-- Grid Films -->
+        <div class="films-grid" [class.shrink]="selectedFilm">
+          <div
+            *ngFor="let film of currentFilms; let i = index"
+            class="film-card"
+            [class.selected]="selectedFilm?.id === film.id"
+            (click)="viewFilm(film)">
+
+            <div class="rank-badge">#{{ i + 1 }}</div>
+
+            <div class="card-actions" *ngIf="activeTab === 'catalogue'">
+              <button class="btn-edit" (click)="ouvrirEdition(film, $event)" title="Modifier">
+                ✏️
+              </button>
+              <button class="btn-close" (click)="supprimerFilm(film.id, $event)" title="Supprimer">
+                🗑️
+              </button>
+            </div>
+
+            <div class="film-poster-wrapper">
+              <img
+                [src]="film.posterUrl || 'assets/no-image.png'"
+                [alt]="film.titre"
+                class="film-poster"
+                onerror="this.src='https://via.placeholder.com/150x220?text=No+Image'"/>
+              <div class="film-overlay">
+                <span>👁️ Détails</span>
+              </div>
+            </div>
+
+            <div class="film-info">
+              <h4 class="film-title">{{ film.titre }}</h4>
+              <div class="film-stats">
+                <span class="stat-chip red">
+                  ❤️ {{ film.nombreFavoris || 0 }}
+                </span>
+                <span class="stat-chip blue">
+                  👁️ {{ film.nombreVues || 0 }}
+                </span>
+                <span class="stat-chip" *ngIf="activeTab === 'catalogue'"
+                      [class.green]="film.videoDisponible"
+                      [class.gray]="!film.videoDisponible">
+                  {{ film.videoDisponible ? '🎥 Vidéo OK' : '⚠️ Sans vidéo' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="currentFilms.length === 0" class="empty-state">
+            <span>🎬</span>
+            <p>Aucun film trouvé</p>
+          </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div *ngIf="selectedFilm" class="detail-panel">
+          <div class="detail-header">
+            <h3>🎬 Détail Film</h3>
+            <div class="detail-header-actions" *ngIf="activeTab === 'catalogue'">
+              <button class="btn-edit" (click)="ouvrirEdition(selectedFilm, $event)" title="Modifier">
+                ✏️ Modifier
+              </button>
+              <button class="btn-delete-text" (click)="supprimerFilm(selectedFilm.id, $event)" title="Supprimer">
+                🗑️ Supprimer
+              </button>
+            </div>
+            <button class="btn-close" (click)="closeDetail()">✕</button>
+          </div>
+          <div class="detail-body">
+
+            <img
+              [src]="selectedFilm.posterUrl"
+              [alt]="selectedFilm.titre"
+              class="detail-poster"
+              onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'"/>
+
+            <h4 class="detail-title">{{ selectedFilm.titre }}</h4>
+
+            <div class="detail-stats-grid">
+              <div class="detail-stat-box red">
+                <span class="ds-number">
+                  {{ selectedFilm.nombreFavoris || 0 }}
+                </span>
+                <span class="ds-label">❤️ Favoris</span>
+              </div>
+              <div class="detail-stat-box blue">
+                <span class="ds-number">
+                  {{ selectedFilm.nombreVues || 0 }}
+                </span>
+                <span class="ds-label">👁️ Vues</span>
+              </div>
+            </div>
+
+            <div class="video-section" *ngIf="activeTab === 'catalogue'">
+              <h5>🎥 Vidéo du film</h5>
+
+              <video *ngIf="selectedFilm.videoDisponible"
+                     width="100%" height="220" controls>
+                <source [src]="getStreamUrl(selectedFilm.id)" type="video/mp4">
+                Ton navigateur ne supporte pas la lecture vidéo.
+              </video>
+
+              <p *ngIf="!selectedFilm.videoDisponible">
+                Aucune vidéo disponible pour ce film.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
