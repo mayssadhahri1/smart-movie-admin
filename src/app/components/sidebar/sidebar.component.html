@@ -1,0 +1,41 @@
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">🎬</span>
+    <div class="logo-text">
+      <span class="logo-title">SmartMovie</span>
+      <span class="logo-sub">Admin Panel</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Dashboard</span>
+    </a>
+    <a routerLink="/users" routerLinkActive="active" class="nav-item">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">Utilisateurs</span>
+    </a>
+    <a routerLink="/films" routerLinkActive="active" class="nav-item">
+      <span class="nav-icon">🎥</span>
+      <span class="nav-label">Films</span>
+    </a>
+    <a routerLink="/surveillance" routerLinkActive="active" class="nav-item">
+  <span class="nav-icon">📡</span>
+  <span class="nav-label">Surveillance</span>
+</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="admin-info">
+      <div class="admin-avatar">👤</div>
+      <div class="admin-details">
+        <span class="admin-name">{{ authService.getNom() }}</span>
+        <span class="admin-role">Administrateur</span>
+      </div>
+    </div>
+    <button class="btn-logout" (click)="authService.logout()">
+      🚪 Déconnexion
+    </button>
+  </div>
+</div>
